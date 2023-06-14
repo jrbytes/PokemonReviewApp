@@ -13,3 +13,6 @@ $ dotnet add package <name>
 
 Uninstall packages
 $ dotnet remove package <name>
+
+Run seed and execute api
+$ dotnet run seeddata
