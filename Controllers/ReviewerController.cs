@@ -12,11 +12,16 @@ namespace PokemonReviewApp.Controllers
   {
     private readonly IReviewerRepository _reviewerRepository;
     private readonly IMapper _mapper;
+    private readonly IReviewRepository _reviewRepository;
 
-    public ReviewerController(IReviewerRepository reviewerRepository, IMapper mapper)
+    public ReviewerController(
+      IReviewerRepository reviewerRepository,
+      IMapper mapper,
+      IReviewRepository reviewRepository)
     {
       _reviewerRepository = reviewerRepository;
       _mapper = mapper;
+      _reviewRepository = reviewRepository;
     }
 
     [HttpGet]
@@ -61,6 +66,38 @@ namespace PokemonReviewApp.Controllers
         return BadRequest();
 
       return Ok(reviews);
+    }
+
+    [HttpPost]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    public IActionResult CreateReviewer([FromBody] ReviewerDto reviewerCreate)
+    {
+      if (reviewerCreate == null)
+        return BadRequest(ModelState);
+
+      var reviewers = _reviewerRepository.GetReviewers()
+        .Where(c => c.LastName.Trim().ToUpper() == reviewerCreate.LastName.TrimEnd().ToUpper())
+        .FirstOrDefault();
+
+      if (reviewers != null)
+      {
+        ModelState.AddModelError("", "Reviewer already exists");
+        return StatusCode(422, ModelState);
+      }
+
+      if (!ModelState.IsValid)
+        return BadRequest(ModelState);
+
+      var reviewerMap = _mapper.Map<Reviewer>(reviewerCreate);
+
+      if (!_reviewerRepository.CreateReviewer(reviewerMap))
+      {
+        ModelState.AddModelError("", "Something went wrong while savin");
+        return StatusCode(500, ModelState);
+      }
+
+      return Ok("Successfully created");
     }
   }
 }
