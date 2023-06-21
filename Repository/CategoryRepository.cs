@@ -13,6 +13,12 @@ namespace PokemonReviewApp.Repository
       _context = context;
     }
 
+    public bool CreateCategory(Category category)
+    {
+      _context.Add(category);
+      return Save();
+    }
+
     public bool CategoryExists(int id)
     {
       return _context.Categories.Any(c => c.Id == id);
